@@ -1,0 +1,89 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{parskip}
+\setlist{nosep,leftmargin=1.2em}
+\titlespacing*{\section}{0pt}{6pt}{2pt}
+\titleformat{\section}{\bfseries\large}{}{0pt}{}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Edge AI Plant Care Monitor}\\[2pt]
+{\normalsize Project Proposal \quad$\cdot$\quad Arduino UNO Q (Ubuntu MPU + STM32/Zephyr MCU)}
+\end{center}
+
+\vspace{2pt}
+\hrule
+\vspace{6pt}
+
+\section*{Overview}
+An embedded, on-device system that identifies a plant, assesses its health from a camera image,
+and fuses that with live soil sensors to produce a daily care recommendation. All inference runs
+locally on the UNO Q; no cloud dependency.
+
+\section*{Two-Stage Concept}
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item \textbf{Recognition + Health.} A camera image is classified for species, then for health
+        (healthy / stressed / diseased) using lightweight CNNs.
+  \item \textbf{Evaluation + Recommendation.} Species and health labels are fused with soil
+        moisture and pH, compared against per-species ideal ranges, and turned into a concrete
+        daily action (e.g.\ water, hold off, adjust pH, inspect for disease).
+\end{enumerate}
+
+\section*{System Architecture}
+\begin{itemize}
+  \item \textbf{STM32 / Zephyr (real-time):} ADC sampling of capacitive soil-moisture and pH probes
+        at $1\,\text{Hz}$, calibration to engineering units, and transmission of a packed struct to the MPU.
+  \item \textbf{Qualcomm MPU / Ubuntu (compute):} camera capture (V4L2), preprocessing to
+        $224\times224$, two TFLite inferences, sensor fusion, rule engine, and logging.
+  \item \textbf{Bridge:} inter-processor link carrying a fixed packet
+        \texttt{\{uint32 timestamp, double moisture, double ph, uint8 status\}} (21 bytes, packed).
+\end{itemize}
+
+\section*{Models \& Data}
+\begin{itemize}
+  \item \textbf{Species:} PlantNet-300K / PlantCLEF (broad species coverage).
+  \item \textbf{Health:} PlantVillage ($54{,}306$ images, 38 classes) for pretraining; PlantDoc for
+        real-world robustness testing.
+  \item \textbf{Fine-tuning:} one week of our own healthy-vs-stressed photos (one sacrificial plant
+        stressed by withholding water, one healthy control) to close the lab-vs-classroom gap.
+\end{itemize}
+
+\section*{Target Plants}
+Tomato (dwarf/patio), pepper (compact), strawberry (everbearing) --- all classroom-sized in 6\,in
+pots, visually distinct for the classifier, and represented in PlantVillage for off-the-shelf
+health data.
+
+\section*{Bill of Materials (core)}
+\begin{itemize}
+  \item Arduino UNO Q (Ubuntu MPU + STM32 MCU)
+  \item Capacitive analog soil-moisture sensor ($3.0\,\text{V}$ output $\rightarrow$ STM32 ADC)
+  \item pH sensor kit (BNC electrode), measuring drainage/reservoir water continuously
+  \item MIPI-CSI carrier board (JMEDIA $\rightarrow$ 22-pin RPi pinout) + RPi-compatible camera
+        module (IMX219 recommended for documented device-tree support)
+\end{itemize}
+
+\section*{Timeline (5 weeks)}
+$$\begin{aligned}
+&\textbf{Wk 1:}\ \text{hardware bring-up, MCU}\leftrightarrow\text{MPU comms, buy plants, begin daily photo/sensor logging}\\
+&\textbf{Wk 2:}\ \text{species model: assemble data, train + quantize, deploy TFLite on-device}\\
+&\textbf{Wk 3:}\ \text{health model + sensor pipeline; calibrate probes; integrate Stage 1}\\
+&\textbf{Wk 4:}\ \text{per-species reference table + rule engine; integrate Stage 2; logging}\\
+&\textbf{Wk 5:}\ \text{fine-tune on collected photos, end-to-end testing, tuning, demo prep}
+\end{aligned}$$
+
+\section*{Risks \& Mitigations}
+\begin{itemize}
+  \item \textbf{Camera enablement is new} on the UNO Q (device-tree edits, limited supported modules)
+        --- budget time in Wk 1; default to the documented IMX219 path.
+  \item \textbf{Continuous soil pH is hard} --- measure runoff/reservoir water, or fall back to periodic
+        manual slurry readings if needed.
+  \item \textbf{Lab-clean training data} underperforms on real images --- mitigated by Wk 1--3 photo
+        collection and Wk 5 fine-tuning.
+\end{itemize}
+
+\end{document}
