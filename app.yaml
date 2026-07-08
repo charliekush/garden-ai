@@ -1,0 +1,10 @@
+name: Garden AI
+description: "Edge AI plant-monitoring app: MCU soil moisture/pH sampling fused with MPU camera-based species and health inference"
+icon: 🌱
+version: "0.1.0"
+
+# Optional: Define any exposed ports (not needed yet)
+ports: []
+
+# Optional: Define bricks if using pre-built components
+bricks: []

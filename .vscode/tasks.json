@@ -1,0 +1,57 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "env": {
+            "UNOQ_HOST": "arduino@chuckduino.local",
+            "UNOQ_REMOTE_DIR": "~/ArduinoApps/garden-ai"
+        }
+    },
+    "tasks": [
+        {
+            "label": "Uno Q: Init Remote Directory",
+            "detail": "One-time setup: create the app folder on the board.",
+            "type": "shell",
+            "command": "ssh ${env:UNOQ_HOST} \"mkdir -p ${env:UNOQ_REMOTE_DIR}\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "Uno Q: Stop App",
+            "type": "shell",
+            "command": "ssh ${env:UNOQ_HOST} \"arduino-app-cli app stop ${env:UNOQ_REMOTE_DIR}\" || true",
+            "problemMatcher": []
+        },
+        {
+            "label": "Uno Q: Sync Files",
+            "type": "shell",
+            "command": "rsync -avz --delete -e ssh --exclude '.git' --exclude '.vscode' --exclude '.claude' --exclude 'proposal' --exclude '__pycache__' --exclude '*.pyc' --exclude '.DS_Store' ./ ${env:UNOQ_HOST}:${env:UNOQ_REMOTE_DIR}/",
+            "problemMatcher": []
+        },
+        {
+            "label": "Uno Q: Start App",
+            "type": "shell",
+            "command": "ssh ${env:UNOQ_HOST} \"arduino-app-cli app start ${env:UNOQ_REMOTE_DIR}\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "Uno Q: Deploy",
+            "detail": "Stop, sync, and restart the app on the board.",
+            "dependsOn": [
+                "Uno Q: Stop App",
+                "Uno Q: Sync Files",
+                "Uno Q: Start App"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Uno Q: View Logs",
+            "type": "shell",
+            "command": "ssh ${env:UNOQ_HOST} \"arduino-app-cli app logs ${env:UNOQ_REMOTE_DIR}\"",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,6 +1,13 @@
 # Created by https://www.toptal.com/developers/gitignore/api/macos,c++,cmake,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,c++,cmake,latex
 
+### Python ###
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
 ### C++ ###
 # Prerequisites
 *.d

@@ -1,0 +1,5 @@
+tflite-runtime
+numpy
+# Captures from the USB UVC webcam (Logitech 1080p Pro Stream Webcam) over
+# V4L2; no libcamera/picamera2 needed since it's a standard USB device.
+opencv-python
